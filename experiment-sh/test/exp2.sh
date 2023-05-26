@@ -47,7 +47,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
 --attack_method blackbox \
---wandb_group TestingGroup\
+--wandb_group TestingGroup \
 --attack_case edge-case \
 --model_replacement False \
 --project_frequency 10 \
