@@ -186,7 +186,7 @@ if __name__ == "__main__":
     vanilla_model = copy.deepcopy(net_avg)
     log_file_name = f"{args.log_folder}/{args.wandb_group}/{args.instance}"
 
-    wandb_ins = wandb.init(project="Backdoor attack in FL",
+    wandb_ins = wandb.init(project="Distributed Backdoor Attack",
                entity="aiotlab",
                name=instance_name,
                group=group_name,
