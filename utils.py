@@ -186,15 +186,15 @@ def get_logging_items(net_list, selected_node_indices, avg_net_prev, attackers_i
                 weights = param.data.cpu().numpy()       
             
         item = [fl_round, is_attacker, bias, bias - avg_prev_bias]
-        with open('logging/metadata.csv', 'a+') as w_f:
-            write = csv.writer(w_f)
-            write.writerow(item) 
-        with open('logging/update_ultimate_w.csv', 'a+') as w_f:
-            write = csv.writer(w_f)
-            write.writerow(weights - avg_prev_weights) 
-        with open('logging/ultimate_w.csv', 'a+') as w_f:
-            write = csv.writer(w_f)
-            write.writerow(weights) 
+        # with open('logging/metadata.csv', 'a+') as w_f:
+        #     write = csv.writer(w_f)
+        #     write.writerow(item) 
+        # with open('logging/update_ultimate_w.csv', 'a+') as w_f:
+        #     write = csv.writer(w_f)
+        #     write.writerow(weights - avg_prev_weights) 
+        # with open('logging/ultimate_w.csv', 'a+') as w_f:
+        #     write = csv.writer(w_f)
+        #     write.writerow(weights) 
 
                 
     return 

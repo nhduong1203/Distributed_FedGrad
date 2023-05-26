@@ -179,8 +179,8 @@ if __name__ == "__main__":
     test(net_avg, device, targetted_task_test_loader, test_batch_size=args.test_batch_size, criterion=criterion, mode="targetted-task", dataset=args.dataset, poison_type=args.poison_type)
 
     # let's remain a copy of the global model for measuring the norm distance:
-    if not os.path.exists(f'{args.log_folder}/{args.wandb_group}'):
-        os.makedirs(f'{args.log_folder}/{args.wandb_group}')
+    # if not os.path.exists(f'{args.log_folder}/{args.wandb_group}'):
+    #     os.makedirs(f'{args.log_folder}/{args.wandb_group}')
     group_name = f"{args.wandb_group}"
     instance_name = f"{args.instance}"
     vanilla_model = copy.deepcopy(net_avg)
