@@ -1,6 +1,7 @@
 data
 .DS_Store
 wandb
+experiment-sh/test.sh
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
