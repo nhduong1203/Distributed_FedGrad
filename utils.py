@@ -349,7 +349,7 @@ def partition_data(dataset, datadir, partition, n_nets, alpha, args):
             #black_box_indices = [i for i in range(50000) if i not in aggregated_val]
             #logger.info("$$$$$$$$$$$$$$ recovered black box indices: {}".format(black_box_indices))
             #exit()
-    traindata_cls_counts = record_net_data_stats(y_train, net_dataidx_map)
+    #traindata_cls_counts = record_net_data_stats(y_train, net_dataidx_map)
 
     return net_dataidx_map
 
