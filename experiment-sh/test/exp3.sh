@@ -48,7 +48,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --defense_method fedgrad \
 --attack_method blackbox \
 --wandb_group TestingGroup \
---instance randomChoose_25Verifiers_6Clients
+--instance randomChoose_25Verifiers_6Clients \
 --attack_case edge-case \
 --model_replacement False \
 --project_frequency 10 \
