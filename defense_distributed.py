@@ -150,10 +150,7 @@ def rlr_avg(vectorize_nets, vectorize_avg_net, freq, attacker_idxs, lr, n_params
     # local_updates[attacker_idxs][poison_w_idxs] = 0
     cnt = 0
     sm_updates_2 = 0
-    # for _id, update in enumerate(local_updates):
-    #     if _id not in attacker_idxs:
-    #         sm_updates_2 += selected_freq[cnt]*update[poison_w_idxs]
-    #         cnt+=1
+
     for _id, update in enumerate(local_updates):
         if _id not in attacker_idxs:
             sm_updates_2 += freq[_id]*update[poison_w_idxs]
@@ -378,8 +375,8 @@ class FedGrad(Defense):
         self.trustworthy_scores = [[0.5] for _ in range(total_workers+1)]
 
     def update(self):
-        self.choosing_frequencies = self.pseudo_choosing_frequencies
-        self.accumulate_c_scores = self.pseudo_accumulate_c_scores
+        # print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        self.choosing_frequencies = self.pseudo_choosing_frequencies.copy()
         # ------------------------------------------------------------
         for key, value in self.list_ac_sc.items():
             if len(value) != 0:
@@ -387,30 +384,40 @@ class FedGrad(Defense):
             self.list_ac_sc[key] = []
         # ------------------------------------------------------------
 
+    def update_trustworthy(self, detect_attacker, detect_honest):
+        for client in detect_attacker:
+            self.trustworthy_scores[client].append(self.lambda_1)
+
+        for client in detect_honest:
+            self.trustworthy_scores[client].append(self.lambda_2)
+
 
     def exec(self, client_models, num_dps, net_freq, net_avg, g_user_indices, pseudo_avg_net, round, selected_attackers, model_name, device, list_client = None, weight_avg = False, *args, **kwargs):
         # print("eta: ", self.eta)
+        # print("g_user_indices: ", g_user_indices)
         start_fedgrad_t = time.time()*1000
 
         vectorize_nets = [vectorize_net(cm).detach().cpu().numpy() for cm in client_models]
         neighbor_distances = []
-        #logger.info("Starting performing FedGrad...")
         
         #-------------------------------------- SOFT FILTER -----------------------------------------------------------
         layer1_start_t = time.time()*1000
-        bias_list, weight_list, avg_bias, avg_weight, weight_update, glob_update, prev_avg_weight = extract_classifier_layer(client_models, pseudo_avg_net, net_avg, model_name)
+        bias_list, _, _, _, weight_update, glob_update, _ = extract_classifier_layer(client_models, pseudo_avg_net, net_avg, model_name)
         total_client = len(g_user_indices)
         
         raw_c_scores = self.get_compromising_scores(glob_update, weight_update)
+        
         c_scores = []
         for idx, cli in enumerate(g_user_indices):
             self.pseudo_choosing_frequencies[cli] = self.choosing_frequencies.get(cli, 0) + 1
             self.pseudo_accumulate_c_scores[cli] = ((self.pseudo_choosing_frequencies[cli] - 1) / self.pseudo_choosing_frequencies[cli]) * self.accumulate_c_scores.get(cli, 0) + (1 / self.pseudo_choosing_frequencies[cli]) *  raw_c_scores[idx]
+
             if cli not in self.list_ac_sc:
                 self.list_ac_sc[cli] = []
             self.list_ac_sc[cli].append(self.pseudo_accumulate_c_scores[cli][0]) #dam bao append sau khi update
             c_scores.append(self.pseudo_accumulate_c_scores[cli])
         c_scores = np.array(c_scores)
+        # print("c_scores: ", c_scores)
         epsilon_1 = min(self.eta, np.median(c_scores))
         
         participated_attackers = []
@@ -527,11 +534,11 @@ class FedGrad(Defense):
         global_final_suspicious_idxs= [g_user_indices[index] for index in final_suspicious_idxs]
         print(f"[Final-result] predicted suspicious set is: {global_final_suspicious_idxs}")   
 
-        for idx, g_idx in enumerate(g_user_indices):
-            if idx in final_suspicious_idxs:
-                self.trustworthy_scores[g_idx].append(self.lambda_1)
-            else:
-                self.trustworthy_scores[g_idx].append(self.lambda_2)
+        # for idx, g_idx in enumerate(g_user_indices):
+        #     if idx in final_suspicious_idxs:
+        #         self.trustworthy_scores[g_idx].append(self.lambda_1)
+        #     else:
+        #         self.trustworthy_scores[g_idx].append(self.lambda_2)
         
         #GET ADDITIONAL INFORMATION of TPR and FPR, TNR
         tpr_fedgrad, fpr_fedgrad, tnr_fedgrad = 0.0, 0.0, 0.0
@@ -558,8 +565,8 @@ class FedGrad(Defense):
         
         # tpr_fedgrad, fpr_fedgrad, tnr_fedgrad = 1.0, 1.0, 1.0
         neo_net_list = []
-        neo_net_freq = []
-        selected_net_indx = []
+        # neo_net_freq = []
+        # selected_net_indx = []
         # for idx, net in enumerate(client_models):
         #     if idx not in final_suspicious_idxs:
         #         neo_net_list.append(net)
@@ -570,11 +577,12 @@ class FedGrad(Defense):
             
         # vectorize_nets = [vectorize_net(cm).detach().cpu().numpy() for cm in neo_net_list]
 
-        selected_num_dps = np.array(num_dps)[selected_net_indx].tolist()
+        # selected_num_dps = np.array(num_dps)[selected_net_indx].tolist()
         # reconstructed_freq = [snd/sum(selected_num_dps) for snd in selected_num_dps]
         # aggregated_grad = np.average(vectorize_nets, weights=reconstructed_freq, axis=0).astype(np.float32)
         # aggregated_model = client_models[0] # slicing which doesn't really matter
         # load_model_weight(aggregated_model, torch.from_numpy(aggregated_grad).to(device))
+        selected_num_dps = []
         
         pred_g_attacker = [g_user_indices[i] for i in final_suspicious_idxs]
         pred_g_honest = [user_index for user_index in g_user_indices if user_index not in pred_g_attacker]

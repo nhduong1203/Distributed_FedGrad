@@ -2,7 +2,7 @@
 python simulated_averaging_distributed.py --fraction 0.1 \
 --lr 0.02 \
 --gamma 0.998 \
---num_nets 150 \
+--num_nets 200 \
 --fl_round 500 \
 --part_nets_per_round 30 \
 --local_train_period 3 \
@@ -26,11 +26,11 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --pdr 0.33 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
---device=cuda:0 \
---number_verifiers 22 \
---clients_per_verifier 5 \
+--device=cuda:2 \
+--number_verifiers 7 \
+--clients_per_verifier 30 \
 --randomChoose True \
 --updateSelection True \
---malicious_verifier normal \
-> log/exp1 2>&1
+--malicious_verifier reverse  \
+> log/latest_reverse_6v_30_3 2>&1
 

@@ -24,7 +24,7 @@ PATH=/apps/centos7/python/3.10.4/bin:${PATH}
 ​
 source ~/venv/pytorch1.11+horovod/bin/activate
 python --version
-LOG_DIR="/home/aaa10078nj/Federated_Learning/HaiDuong_DistFedGrad/logs/test/$JOB_NAME_$JOB_ID"
+LOG_DIR="/home/aaa10078nj/Federated_Learning/HaiDuong_DistFedGrad/logs/optimalVerifiers/$JOB_NAME_$JOB_ID"
 rm -r ${LOG_DIR}
 mkdir ${LOG_DIR}
 ​
@@ -36,7 +36,7 @@ cd $SGE_LOCALDIR/$JOB_ID
 python simulated_averaging_distributed.py --fraction 0.1 \
 --lr 0.02 \
 --gamma 0.998 \
---num_nets 150 \
+--num_nets 200 \
 --fl_round 500 \
 --part_nets_per_round 30 \
 --local_train_period 3 \
@@ -47,8 +47,8 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
 --attack_method blackbox \
---wandb_group TestingGroup \
---instance randomChoose_25Verifiers_6Clients
+--wandb_group optimalVerifiersGroup \
+--instance cifar_25Verifiers_6Clients \
 --attack_case edge-case \
 --model_replacement False \
 --project_frequency 10 \
@@ -69,5 +69,4 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --malicious_verifier normal \
 --log_folder ${LOG_DIR} \
 --device=cuda
-​
 #> log/exp1 2>&1

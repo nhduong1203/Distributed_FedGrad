@@ -17,6 +17,7 @@ from defense_distributed import *
 import datasets
 import time
 import csv
+import concurrent.futures
 
 class Net(nn.Module):
     def __init__(self, num_classes):
@@ -423,6 +424,38 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
             NotImplementedError("Unsupported defense method !")
         self.__attacker_pool = np.random.choice(self.num_nets, int(self.num_nets*self.attacker_percent), replace=False)
 
+    def remove(self, attackers, benigns):
+        total_dict = {}
+        for i in range(len(attackers)):
+            atk = attackers[i]
+            benign = benigns[i]
+            for j in atk:
+                if j not in total_dict:
+                    total_dict[j] = 0
+                total_dict[j] -= 1
+            for j in benign:
+                if j not in total_dict:
+                    total_dict[j] = 0
+                total_dict[j] += 1
+        
+        removed_atk = []
+        removed_benign = []
+        for i in range(len(attackers)):
+            atk = attackers[i]
+            benign = benigns[i]
+            count = 0
+            for j in atk:
+                if (total_dict[j] + 1) > 0: 
+                    count += 1
+            for j in benign:
+                if (total_dict[j] - 1) < 0: 
+                    count += 1
+            if(count < self.clients_per_verifier/3):
+                removed_atk.append(atk)
+                removed_benign.append(benign)
+
+        return removed_atk, removed_benign
+
     def run(self, wandb_ins=None):
         main_task_acc = []
         raw_task_acc = []
@@ -674,25 +707,28 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
 
                 round_verified = []
                 atk_verify = 0
+                malicious_verifier = []
                 
 
                 for verifier_id in range(len(verifier_set)):
                     # ------------------------------------------------------------------------
                     ## Not Randomly
-                    if not self.randomChoose:
-                        if(verifier_id % (number_verifier/3) == 0):
-                            list_node_index = [i for i in range(len(selected_node_indices))]
-                        this_node_index = random.sample(list_node_index, number_clients_per_verifier)
-                        list_node_index = [i for i in list_node_index if i not in this_node_index]
-                    else:
-                        this_node_index = random.sample(list_node_index, number_clients_per_verifier) #local
-                        round_verified = round_verified + this_node_index
-                        round_verified = list(set(round_verified))
+                    # if not self.randomChoose:
+                    #     if(verifier_id % (number_verifier/3) == 0):
+                    #         list_node_index = [i for i in range(len(selected_node_indices))]
+                    #     this_node_index = random.sample(list_node_index, number_clients_per_verifier)
+                    #     list_node_index = [i for i in list_node_index if i not in this_node_index]
+                    # else:
+
+                    # list_node_index = [i for i in range(len(selected_node_indices))]
+                    this_node_index = random.sample(list_node_index, number_clients_per_verifier) #local
+                    round_verified = round_verified + this_node_index
+                    round_verified = list(set(round_verified))
                     # ------------------------------------------------------------------------
 
                     this_node = [selected_node_indices[i] for i in this_node_index] #global
-                    this_net_list = [net_list[index] for index in this_node_index] #local
-                    this_net_freq = [net_freq[index] for index in this_node_index] #local
+                    this_net_list = [net_list[index] for index in this_node_index] #global
+                    this_net_freq = [net_freq[index] for index in this_node_index] #global
                     this_attacker = [i for i in this_node if i in selected_attackers]
 
                     
@@ -700,7 +736,7 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
                     round_net_list, round_num_dps, pred_g_attacker, pred_g_honest, tpr_fedgrad, fpr_fedgrad, tnr_fedgrad, layer1_inf_time, layer2_inf_t, fedgrad_t = self._defender.exec(client_models=this_net_list,
                                                             num_dps=num_data_points,
                                                             net_freq=this_net_freq,
-                                                            net_avg=self.net_avg,
+                                                            net_avg=copy.deepcopy(self.net_avg),
                                                             g_user_indices=this_node, #global
                                                             pseudo_avg_net=pseudo_avg_net,
                                                             round=flr,
@@ -709,28 +745,89 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
                                                             device=self.device) 
                     
                     # Reverse attacker's verify result
+                    
                     if verifier_set[verifier_id] in self.__attacker_pool:
+                        malicious_verifier.append(1)
                         atk_verify += 1
                         if self.malicious_verifier == "reverse": 
                             temp = pred_g_attacker
                             pred_g_attacker = pred_g_honest
                             pred_g_honest = temp
+
+                        elif self.malicious_verifier == "random":
+                            s = random.randint(1, len(this_node))
+                            pred_g_attacker = np.random.choice(this_node, s, replace=False).tolist()
+                            pred_g_honest = []
+                            for i in this_node:
+                                if i not in pred_g_attacker:
+                                    pred_g_honest.append(i)
                     
-                    
-                    detect_attacker = detect_attacker + pred_g_attacker
-                    detect_honest = detect_honest + pred_g_honest
-                    # print("------------------------------------------------------------------------------------")
+                        elif self.malicious_verifier == "all_attacker":
+                            pred_g_attacker = this_node
+                            pred_g_honest = []
+                        
+                        elif self.malicious_verifier == "all_benign":
+                            pred_g_attacker = []
+                            pred_g_honest = this_node
+                    else:
+                        malicious_verifier.append(0)
+                    detect_attacker.append(pred_g_attacker)
+                    detect_honest.append(pred_g_honest)
                     print(f"verifier: {verifier_id}, true positive: {tpr_fedgrad}, true negative: {tnr_fedgrad}, false positive: {fpr_fedgrad}\n")
                     print(f"predict honest: {pred_g_honest}\n")
                     print(f"predict attacker: {pred_g_attacker}\n")
                     print(f"true attacker: {this_attacker}\n")
                     print("------------------------------------------------------------------------------------")
 
-                self._defender.update()
+                
+                
                 honest_nets = []
                 total_num_dps = []
                 honest_client = []
-                cs_honest_score = [] # weight average
+                #cs_honest_score = [] # weight average
+
+                voting = True
+                if voting:
+                    # detect_attacker, detect_honest = self.remove(detect_attacker, detect_honest)
+                    print("Log info ...: ")
+                    print(detect_attacker)
+                    print(detect_honest)
+                    print(malicious_verifier)
+                    detect_attacker = [element for sublist in detect_attacker for element in sublist]
+                    detect_honest = [element for sublist in detect_honest for element in sublist]
+                    honest_dict = {index: 0 for index in selected_node_indices}
+                    atk_dict = {index: 0 for index in selected_node_indices}
+                    for element in detect_attacker:
+                        atk_dict[element] += 1
+                    for element in detect_honest:
+                        honest_dict[element] += 1
+
+                    detect_honest = []
+                    detect_attacker = []
+                    for element in selected_node_indices:
+                        if ((honest_dict[element] + atk_dict[element]) == 0): continue
+                        if element in selected_attackers:
+                            print ("Attacker: ", honest_dict[element]/(honest_dict[element] + atk_dict[element]))
+                        else:
+                            print ("Benign: ", honest_dict[element]/(honest_dict[element] + atk_dict[element]))
+                        if(honest_dict[element]/(honest_dict[element] + atk_dict[element]) > 0.5):
+                            detect_honest.append(element)
+                        else:
+                            detect_attacker.append(element)
+                    print("voting reuslt: ", detect_honest)
+                    print("true attacker: ", selected_attackers)
+                else:
+                    detect_attacker = [element for sublist in detect_attacker for element in sublist]
+                    detect_honest = [element for sublist in detect_honest for element in sublist]
+                    detect_attacker = list(set(detect_attacker))
+                    detect_honest = list(set(detect_honest))
+                
+                print("detect attacker: ", detect_attacker)
+                print("detect honest", detect_honest)
+
+                
+                    
+                
         
                 for idx, client in enumerate(selected_node_indices):
                     if (client not in detect_attacker):
@@ -739,22 +836,18 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
                         honest_nets.append(net_list[idx])
                         total_num_dps.append(num_data_points[idx])
                         honest_client.append(client)
-                        if client in self._defender.accumulate_c_scores:
-                            cs_honest_score.append(self._defender.accumulate_c_scores[client]) # weight average
-                        else:
-                            cs_honest_score.append(0) 
+                        # if client in self._defender.accumulate_c_scores:
+                        #     cs_honest_score.append(self._defender.accumulate_c_scores[client]) # weight average
+                        # else:
+                        #     cs_honest_score.append(0) 
 
                 #-----------------------------------------------------------------------------------------------------------------------------------------------------#
                 tpr_fedgrad, fpr_fedgrad, tnr_fedgrad = 0.0, 0.0, 0.0
                 tp_fedgrad_pred = []
-                predict_attackers = []
-                for i in selected_node_indices:
-                    if i not in honest_client:
-                        predict_attackers.append(i)
                 for id_ in selected_attackers:
-                    tp_fedgrad_pred.append(1.0 if id_ in predict_attackers else 0.0)
+                    tp_fedgrad_pred.append(1.0 if id_ in detect_attacker else 0.0)
                 total_client = len(selected_node_indices)
-                fp_fegrad = len(predict_attackers) - sum(tp_fedgrad_pred)
+                fp_fegrad = len(detect_attacker) - sum(tp_fedgrad_pred)
                 total_positive = len(selected_attackers)
                 total_negative = total_client - total_positive
                 tpr_fedgrad = 1.0
@@ -773,6 +866,9 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
                 print(f"Flr: {flr}, attackers: {selected_attackers}")
                 not_verified = len(selected_node_indices) - len(round_verified)
                 print(f'Flr: {flr}, number not verify: {not_verified}')
+
+                self._defender.update_trustworthy(detect_attacker, detect_honest)
+                self._defender.update()
 
 
                 if not weightUpdate:
