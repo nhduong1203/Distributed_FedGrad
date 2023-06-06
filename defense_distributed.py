@@ -479,8 +479,8 @@ class FedGrad(Defense):
                   
         # From now on, trusted_model contains the index base model treated as valid user.
         suspicious_idxs_2, saved_pairwise_sim, layer2_inf_t = [], [], 0.0
-        
-        final_suspicious_idxs = suspicious_idxs_1 # temporarily assigned by the first filter
+        final_suspicious_idxs = suspicious_idxs_1 
+
         # NOW CHECK FOR SWITCH ROUND
         # TODO: find dynamic threshold
         # STILL PERFORM HARD-FILTER to save the historical information about colluding property.
@@ -533,14 +533,12 @@ class FedGrad(Defense):
         fpr_fedgrad = 0
         if total_negative > 0.0:
             fpr_fedgrad = fp_fegrad/total_negative
-        
         tnr_fedgrad = 1.0 - fpr_fedgrad
         
         end_fedgrad_t = time.time()*1000
         fedgrad_t = end_fedgrad_t - start_fedgrad_t # finish calculating the computation time of FedGrad
         
-        neo_net_list = []
-        selected_num_dps = []
+        neo_net_list, selected_num_dps = [], []
         
         pred_g_attacker = [g_user_indices[i] for i in final_suspicious_idxs]
         pred_g_honest = [user_index for user_index in g_user_indices if user_index not in pred_g_attacker]
