@@ -370,19 +370,15 @@ class FedGrad(Defense):
         self.lambda_1 = 0.25
         self.lambda_2 = 1.0
         
-        #logger.info("Starting performing FedGrad...")
         self.pairwise_choosing_frequencies = np.zeros((total_workers, total_workers))
         self.trustworthy_scores = [[0.5] for _ in range(total_workers+1)]
 
     def update(self):
-        # print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         self.choosing_frequencies = self.pseudo_choosing_frequencies.copy()
-        # ------------------------------------------------------------
         for key, value in self.list_ac_sc.items():
             if len(value) != 0:
                 self.accumulate_c_scores[key] = sum(value)/len(value)
             self.list_ac_sc[key] = []
-        # ------------------------------------------------------------
 
     def update_trustworthy(self, detect_attacker, detect_honest):
         for client in detect_attacker:
@@ -393,8 +389,6 @@ class FedGrad(Defense):
 
 
     def exec(self, client_models, num_dps, net_freq, net_avg, g_user_indices, pseudo_avg_net, round, selected_attackers, model_name, device, list_client = None, weight_avg = False, *args, **kwargs):
-        # print("eta: ", self.eta)
-        # print("g_user_indices: ", g_user_indices)
         start_fedgrad_t = time.time()*1000
 
         vectorize_nets = [vectorize_net(cm).detach().cpu().numpy() for cm in client_models]
@@ -406,27 +400,26 @@ class FedGrad(Defense):
         total_client = len(g_user_indices)
         
         raw_c_scores = self.get_compromising_scores(glob_update, weight_update)
-        
-        c_scores = []
+        c_scores = [] 
+
         for idx, cli in enumerate(g_user_indices):
             self.pseudo_choosing_frequencies[cli] = self.choosing_frequencies.get(cli, 0) + 1
             self.pseudo_accumulate_c_scores[cli] = ((self.pseudo_choosing_frequencies[cli] - 1) / self.pseudo_choosing_frequencies[cli]) * self.accumulate_c_scores.get(cli, 0) + (1 / self.pseudo_choosing_frequencies[cli]) *  raw_c_scores[idx]
-
+            
             if cli not in self.list_ac_sc:
                 self.list_ac_sc[cli] = []
-            self.list_ac_sc[cli].append(self.pseudo_accumulate_c_scores[cli][0]) #dam bao append sau khi update
+            self.list_ac_sc[cli].append(self.pseudo_accumulate_c_scores[cli][0]) # append after update
             c_scores.append(self.pseudo_accumulate_c_scores[cli])
+
         c_scores = np.array(c_scores)
-        # print("c_scores: ", c_scores)
         epsilon_1 = min(self.eta, np.median(c_scores))
-        
         participated_attackers = []
         for in_, id_ in enumerate(g_user_indices):
             if id_ in selected_attackers:
                 participated_attackers.append(in_)
         
-        suspicious_idxs_1 = [ind_ for ind_ in range(total_client) if c_scores[ind_] > epsilon_1]
-        global_suspicious_idxs_1 = [g_user_indices[index] for index in suspicious_idxs_1]
+        suspicious_idxs_1 = [ind_ for ind_ in range(total_client) if c_scores[ind_] > epsilon_1] #local
+        global_suspicious_idxs_1 = [g_user_indices[index] for index in suspicious_idxs_1] #global
         layer1_end_t = time.time()*1000
         layer1_inf_time = layer1_end_t-layer1_start_t
         print("epsilon_1: ",epsilon_1)
@@ -438,19 +431,18 @@ class FedGrad(Defense):
         round_pw_bias = np.zeros((total_client, total_client))
         round_pw_weight = np.zeros((total_client, total_client))
         
-        sum_diff_by_label, glob_temp_sum_by_label = calculate_sum_grad_diff(meta_data = weight_update, num_w = weight_update[0].shape[-1], glob_update=glob_update)
+        sum_diff_by_label, _ = calculate_sum_grad_diff(meta_data = weight_update, num_w = weight_update[0].shape[-1], glob_update=glob_update)
         norm_bias_list = normalize(bias_list, axis=1)
         norm_grad_diff_list = normalize(sum_diff_by_label, axis=1)
         
         # UPDATE CUMULATIVE COSINE SIMILARITY 
         for i, g_i in enumerate(g_user_indices):
-            distance = []
             for j, g_j in enumerate(g_user_indices):
-                self.pairwise_choosing_frequencies[g_i][g_j] = self.pairwise_choosing_frequencies[g_i][g_j] + 1.0
                 bias_p_i = norm_bias_list[i]
                 bias_p_j = norm_bias_list[j]
                 cs_1 = np.dot(bias_p_i, bias_p_j)/(np.linalg.norm(bias_p_i)*np.linalg.norm(bias_p_j))
                 round_pw_bias[i][j] = cs_1.flatten()
+
                 w_p_i = norm_grad_diff_list[i]
                 w_p_j = norm_grad_diff_list[j]
                 cs_2 = np.dot(w_p_i, w_p_j)/(np.linalg.norm(w_p_i)*np.linalg.norm(w_p_j))
@@ -462,7 +454,7 @@ class FedGrad(Defense):
             for j in range(i+1, len(vectorize_nets)):
                 if i != j:
                     g_j = vectorize_nets[j]
-                    distance.append(float(np.linalg.norm(g_i-g_j)**2)) # let's change this to pytorch version
+                    distance.append(float(np.linalg.norm(g_i-g_j)**2))
             neighbor_distances.append(distance)
 
         nb_in_score = self.num_workers-self.s-2
@@ -484,32 +476,22 @@ class FedGrad(Defense):
         scaler = MinMaxScaler()
         round_pw_bias = scaler.fit_transform(round_pw_bias)
         round_pw_weight = scaler.fit_transform(round_pw_weight)
-
-        # update cumulative information
-        for i, g_i in enumerate(g_user_indices):
-            for j, g_j in enumerate(g_user_indices):
-                freq_appear = self.pairwise_choosing_frequencies[g_i][g_j]
-                self.pairwise_w[g_i][g_j] = (freq_appear - 1)/freq_appear*self.pairwise_w[g_i][g_j] +  1/freq_appear*round_pw_weight[i][j]
-                self.pairwise_b[g_i][g_j] = (freq_appear - 1)/freq_appear*self.pairwise_b[g_i][g_j] +  1/freq_appear*round_pw_bias[i][j]
-                
-        
+                  
         # From now on, trusted_model contains the index base model treated as valid user.
-        suspicious_idxs_2 = []
-        saved_pairwise_sim = []
-        layer2_inf_t = 0.0
+        suspicious_idxs_2, saved_pairwise_sim, layer2_inf_t = [], [], 0.0
         
         final_suspicious_idxs = suspicious_idxs_1 # temporarily assigned by the first filter
         # NOW CHECK FOR SWITCH ROUND
         # TODO: find dynamic threshold
         # STILL PERFORM HARD-FILTER to save the historical information about colluding property.
-        cummulative_w = self.pairwise_w[np.ix_(g_user_indices, g_user_indices)]
-        cummulative_b = self.pairwise_b[np.ix_(g_user_indices, g_user_indices)]
-        saved_pairwise_sim = np.hstack((cummulative_w, cummulative_b))
+
+        # use round information instead
+        saved_pairwise_sim = np.hstack((round_pw_weight, round_pw_bias))
         kmeans = KMeans(n_clusters = 2)
         pred_labels = kmeans.fit_predict(saved_pairwise_sim)
         trusted_cluster_idx = pred_labels[trusted_index] # assign cluster containing trusted client as benign cluster
         malicious_cluster_idx = 0 if trusted_cluster_idx == 1 else 1
-        suspicious_idxs_2 = np.argwhere(np.asarray(pred_labels) == malicious_cluster_idx).flatten()
+        suspicious_idxs_2 = np.argwhere(np.asarray(pred_labels) == malicious_cluster_idx).flatten() # local
         
         layer2_end_t = time.time()*1000
         layer2_inf_t = layer2_end_t-layer2_start_t
@@ -522,6 +504,7 @@ class FedGrad(Defense):
         pseudo_final_suspicious_idxs = np.union1d(suspicious_idxs_2, suspicious_idxs_1).flatten()
         if round >= self.switch_round:
             final_suspicious_idxs = pseudo_final_suspicious_idxs
+            
         # STARTING USING TRUSTWORTHY SCORES
         filtered_suspicious_idxs = list(final_suspicious_idxs.copy())
         if round >= self.switch_round:
@@ -533,12 +516,6 @@ class FedGrad(Defense):
             final_suspicious_idxs = filtered_suspicious_idxs
         global_final_suspicious_idxs= [g_user_indices[index] for index in final_suspicious_idxs]
         print(f"[Final-result] predicted suspicious set is: {global_final_suspicious_idxs}")   
-
-        # for idx, g_idx in enumerate(g_user_indices):
-        #     if idx in final_suspicious_idxs:
-        #         self.trustworthy_scores[g_idx].append(self.lambda_1)
-        #     else:
-        #         self.trustworthy_scores[g_idx].append(self.lambda_2)
         
         #GET ADDITIONAL INFORMATION of TPR and FPR, TNR
         tpr_fedgrad, fpr_fedgrad, tnr_fedgrad = 0.0, 0.0, 0.0
@@ -553,7 +530,6 @@ class FedGrad(Defense):
         tpr_fedgrad = 1.0
         if total_positive > 0.0:
             tpr_fedgrad = sum(tp_fedgrad_pred)/total_positive
-        # False postive rate
         fpr_fedgrad = 0
         if total_negative > 0.0:
             fpr_fedgrad = fp_fegrad/total_negative
@@ -563,25 +539,7 @@ class FedGrad(Defense):
         end_fedgrad_t = time.time()*1000
         fedgrad_t = end_fedgrad_t - start_fedgrad_t # finish calculating the computation time of FedGrad
         
-        # tpr_fedgrad, fpr_fedgrad, tnr_fedgrad = 1.0, 1.0, 1.0
         neo_net_list = []
-        # neo_net_freq = []
-        # selected_net_indx = []
-        # for idx, net in enumerate(client_models):
-        #     if idx not in final_suspicious_idxs:
-        #         neo_net_list.append(net)
-        #         neo_net_freq.append(1.0)
-        #         selected_net_indx.append(idx)
-        # if len(neo_net_list) == 0:
-        #     return [net_avg], [1.0], g_user_indices, [], tpr_fedgrad, fpr_fedgrad, tnr_fedgrad, layer1_inf_time, layer2_inf_t, fedgrad_t
-            
-        # vectorize_nets = [vectorize_net(cm).detach().cpu().numpy() for cm in neo_net_list]
-
-        # selected_num_dps = np.array(num_dps)[selected_net_indx].tolist()
-        # reconstructed_freq = [snd/sum(selected_num_dps) for snd in selected_num_dps]
-        # aggregated_grad = np.average(vectorize_nets, weights=reconstructed_freq, axis=0).astype(np.float32)
-        # aggregated_model = client_models[0] # slicing which doesn't really matter
-        # load_model_weight(aggregated_model, torch.from_numpy(aggregated_grad).to(device))
         selected_num_dps = []
         
         pred_g_attacker = [g_user_indices[i] for i in final_suspicious_idxs]

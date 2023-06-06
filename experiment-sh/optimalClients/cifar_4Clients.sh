@@ -48,7 +48,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --defense_method fedgrad \
 --attack_method blackbox \
 --wandb_group optimalClientsGroup \
---instance cifar_15Verifiers_5Clients \
+--instance cifar_15Verifiers_4Clients \
 --attack_case edge-case \
 --model_replacement False \
 --project_frequency 10 \
@@ -63,7 +63,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
 --number_verifiers 15 \
---clients_per_verifier 5 \
+--clients_per_verifier 4 \
 --randomChoose True \
 --updateSelection True \
 --malicious_verifier normal \
