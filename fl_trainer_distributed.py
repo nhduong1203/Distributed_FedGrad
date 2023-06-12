@@ -423,38 +423,6 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
         else:
             NotImplementedError("Unsupported defense method !")
         self.__attacker_pool = np.random.choice(self.num_nets, int(self.num_nets*self.attacker_percent), replace=False)
-
-    # def remove(self, attackers, benigns):
-    #     total_dict = {}
-    #     for i in range(len(attackers)):
-    #         atk = attackers[i]
-    #         benign = benigns[i]
-    #         for j in atk:
-    #             if j not in total_dict:
-    #                 total_dict[j] = 0
-    #             total_dict[j] -= 1
-    #         for j in benign:
-    #             if j not in total_dict:
-    #                 total_dict[j] = 0
-    #             total_dict[j] += 1
-        
-    #     removed_atk = []
-    #     removed_benign = []
-    #     for i in range(len(attackers)):
-    #         atk = attackers[i]
-    #         benign = benigns[i]
-    #         count = 0
-    #         for j in atk:
-    #             if (total_dict[j] + 1) > 0: 
-    #                 count += 1
-    #         for j in benign:
-    #             if (total_dict[j] - 1) < 0: 
-    #                 count += 1
-    #         if(count < self.clients_per_verifier/3):
-    #             removed_atk.append(atk)
-    #             removed_benign.append(benign)
-
-    #     return removed_atk, removed_benign
     
     def select_random_indexes(self, numbers, K):
         # Sắp xếp mảng theo giá trị giảm dần

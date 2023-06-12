@@ -28,7 +28,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --pdr 0.33 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
---device=cuda:3 \
+--device=cuda:1 \
 --number_verifiers 23 \
 --clients_per_verifier 5 \
 --randomChoose True \

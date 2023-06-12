@@ -42,7 +42,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --local_train_period 3 \
 --adversarial_local_training_period 3 \
 --dataset mnist \
---model vgg9 \
+--model lenet \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
@@ -56,7 +56,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --eps 2 \
 --adv_lr 0.02 \
 --prox_attack False \
---poison_type southwest \
+--poison_type ardis \
 --norm_bound 2 \
 --attacker_percent 0.25 \
 --pdr 0.08 \
