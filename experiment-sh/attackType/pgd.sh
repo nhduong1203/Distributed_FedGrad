@@ -51,7 +51,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --instance pgd \
 --attack_case edge-case \
 --model_replacement False \
---project_frequency 10 \
+--project_frequency 1 \
 --stddev 0.025 \
 --eps 2 \
 --adv_lr 0.02 \
