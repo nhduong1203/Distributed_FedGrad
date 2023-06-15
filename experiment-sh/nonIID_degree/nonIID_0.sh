@@ -41,7 +41,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --part_nets_per_round 30 \
 --local_train_period 3 \
 --adversarial_local_training_period 3 \
---dataset cifar \
+--dataset cifar10 \
 --model vgg9 \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
