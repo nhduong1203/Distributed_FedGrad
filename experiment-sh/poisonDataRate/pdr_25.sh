@@ -2,7 +2,7 @@
 #$ -cwd
 #$ -l rt_G.small=1
 #$ -l h_rt=54:00:00
-#$ -o /home/aaa10078nj/Federated_Learning//HaiDuong_DistFedGrad/logs/test/$JOB_NAME_$JOB_ID.log
+#$ -o /home/aaa10078nj/Federated_Learning//HaiDuong_DistFedGrad/logs/poisonDataRate/$JOB_NAME_$JOB_ID.log
 #$ -j y
 ​
 source /etc/profile.d/modules.sh
@@ -41,7 +41,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --part_nets_per_round 30 \
 --local_train_period 3 \
 --adversarial_local_training_period 3 \
---dataset cifar \
+--dataset cifar10 \
 --model vgg9 \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
@@ -51,7 +51,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --instance pdr_25 \
 --attack_case edge-case \
 --model_replacement False \
---project_frequency 10 \
+--project_frequency 1 \
 --stddev 0.025 \
 --eps 2 \
 --adv_lr 0.02 \
