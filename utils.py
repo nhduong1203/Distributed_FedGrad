@@ -53,8 +53,8 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, 1)
         self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        self.dropout1 = nn.Dropout2d(0.25)
-        self.dropout2 = nn.Dropout2d(0.5)
+        self.dropout1 = nn.Dropout(0.25)
+        self.dropout2 = nn.Dropout(0.5)
         self.fc1 = nn.Linear(9216, 128)
         self.fc2 = nn.Linear(128, num_classes)
 
@@ -254,22 +254,6 @@ def partition_data(dataset, datadir, partition, n_nets, alpha, args):
         n_train = X_train.shape[0]
     elif dataset.lower() == 'cifar10':
         X_train, y_train, X_test, y_test = load_cifar10_data(datadir)
-        # if args.poison_type == "howto":
-        #     sampled_indices_train = [874, 49163, 34287, 21422, 48003, 47001, 48030, 22984, 37533, 41336, 3678, 37365,
-        #                                 19165, 34385, 41861, 39824, 561, 49588, 4528, 3378, 38658, 38735, 19500,  9744, 47026, 1605, 389]
-        #     sampled_indices_test = [32941, 36005, 40138]
-        #     cifar10_whole_range = np.arange(X_train.shape[0])
-        #     remaining_indices = [i for i in cifar10_whole_range if i not in sampled_indices_train+sampled_indices_test]
-        #     X_train = X_train[sampled_indices_train, :, :, :]
-        #     logger.info("@@@ Poisoning type: {} Num of Remaining Data Points (excluding poisoned data points): {}".format(
-        #                                 args.poison_type, 
-        #                                 X_train.shape[0]))
-        
-        # # 0-49999 normal cifar10, 50000 - 50735 wow airline
-        # if args.poison_type == 'southwest+wow':
-        #     with open('./saved_datasets/wow_images_new_whole.pkl', 'rb') as train_f:
-        #         saved_wow_dataset_whole = pickle.load(train_f)
-        #     X_train = np.append(X_train, saved_wow_dataset_whole, axis=0)
         n_train = X_train.shape[0]
 
     elif dataset == 'cinic10':
@@ -341,15 +325,6 @@ def partition_data(dataset, datadir, partition, n_nets, alpha, args):
                     remaining_indices = [i for i in v if i not in green_car_indices]
                     net_dataidx_map[k] = remaining_indices
 
-            #logger.info("Remaining total number of data points : {}".format(sanity_check_counter))
-            # sanity check:
-            #aggregated_val = []
-            #for val in net_dataidx_map.values():
-            #    aggregated_val+= val
-            #black_box_indices = [i for i in range(50000) if i not in aggregated_val]
-            #logger.info("$$$$$$$$$$$$$$ recovered black box indices: {}".format(black_box_indices))
-            #exit()
-    #traindata_cls_counts = record_net_data_stats(y_train, net_dataidx_map)
 
     return net_dataidx_map
 
@@ -956,14 +931,12 @@ def load_poisoned_dataset_updated(args):
                 for cad_ang in cand_angles:
                     PIL_img = transforms.ToPILImage()(images_seven[idx]).convert("L")
                     PIL_img_rotate = transforms.functional.rotate(PIL_img, cad_ang, fill=(0,))
-
-                    #plt.imshow(PIL_img_rotate, cmap='gray')
-                    #plt.pause(0.0001)
                     img_rotate = torch.from_numpy(np.array(PIL_img_rotate))
                     images_seven_DA = torch.cat((images_seven_DA, img_rotate.reshape(1,img_rotate.size()[0], img_rotate.size()[0])), 0)
 
 
             poisoned_labels_DA = torch.ones(images_seven_DA.size()[0]).long()
+
         total_ardis_samples = images_seven_cut.size()[0]
         poisoned_emnist_dataset = copy.deepcopy(emnist_train_dataset)
         poisoned_emnist_dataset_2 = copy.deepcopy(emnist_train_dataset)
@@ -982,6 +955,8 @@ def load_poisoned_dataset_updated(args):
         # NEW: This step tries to calculate number of poisoned samples needed. 
         total_poisoned_samples = int(pdr*num_sampled_data_points/(1.0-pdr))
         total_poisoned_samples_2 = int(pdr*num_sampled_data_points/(1.0-pdr_2))
+
+        print("total_ardis_samples: ", total_ardis_samples)
         
         samped_poisoned_data_indices = np.random.choice(total_ardis_samples, total_poisoned_samples, replace=False)
         samped_poisoned_data_indices_2 = np.random.choice(total_ardis_samples, total_poisoned_samples_2, replace=False)

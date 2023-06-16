@@ -33,15 +33,15 @@ cd $SGE_LOCALDIR/$JOB_ID
 #cd Distributed_FedGrad
 ​
 # southwest attack
-python simulated_averaging_distributed.py --fraction 0.1 \
+python simulated_averaging_distributed.py --fraction 0.15 \
 --lr 0.02 \
 --gamma 0.998 \
---num_nets 200 \
+--num_nets 3383 \
 --fl_round 500 \
 --part_nets_per_round 30 \
 --local_train_period 3 \
 --adversarial_local_training_period 3 \
---dataset mnist \
+--dataset emnist \
 --model lenet \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
@@ -59,7 +59,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --poison_type ardis \
 --norm_bound 2 \
 --attacker_percent 0.25 \
---pdr 0.08 \
+--pdr 0.5 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
 --number_verifiers 25 \

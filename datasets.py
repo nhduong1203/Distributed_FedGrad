@@ -118,11 +118,11 @@ class EMNIST_truncated(data.Dataset):
                                 download=self.download)
 
         if self.train:
-            data = emnist_dataobj.train_data
-            target = emnist_dataobj.train_labels
+            data = emnist_dataobj.data
+            target = emnist_dataobj.targets
         else:
-            data = emnist_dataobj.test_data
-            target = emnist_dataobj.test_labels
+            data = emnist_dataobj.data
+            target = emnist_dataobj.targets
 
         if self.dataidxs is not None:
             data = data[self.dataidxs]
@@ -310,8 +310,6 @@ class CIFAR10_truncated(data.Dataset):
         cifar_dataobj = CIFAR10(self.root, self.train, self.transform, self.target_transform, self.download)
 
         if self.train:
-            #print("train member of the class: {}".format(self.train))
-            #data = cifar_dataobj.train_data
             data = cifar_dataobj.data
             target = np.array(cifar_dataobj.targets)
         else:
@@ -515,26 +513,6 @@ class CIFAR10_Poisoned(data.Dataset):
     def __len__(self):
         return len(self.data)
 
-    # we probably don't need to truncate the dataset
-    # def __build_truncated_dataset__(self):
-
-    #     cifar_dataobj = CIFAR10(self.root, self.train, self.transform, self.target_transform, self.download)
-
-    #     if self.train:
-    #         #print("train member of the class: {}".format(self.train))
-    #         #data = cifar_dataobj.train_data
-    #         data = cifar_dataobj.data
-    #         target = np.array(cifar_dataobj.targets)
-    #     else:
-    #         data = cifar_dataobj.data
-    #         target = np.array(cifar_dataobj.targets)
-
-    #     if self.dataidxs is not None:
-    #         data = data[self.dataidxs]
-    #         target = target[self.dataidxs]
-
-    #     return data, target
-
 
 
 class CIFAR10ColorGrayScale(data.Dataset):
@@ -557,8 +535,6 @@ class CIFAR10ColorGrayScale(data.Dataset):
         cifar_dataobj = CIFAR10(self.root, self.train, None, self.target_transform, self.download)
 
         if self.train:
-            #print("train member of the class: {}".format(self.train))
-            #data = cifar_dataobj.train_data
             data = cifar_dataobj.data
             target = np.array(cifar_dataobj.targets)
         else:
