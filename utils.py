@@ -892,7 +892,7 @@ def load_poisoned_dataset_updated(args):
     # default dpr: 0.33 for CIFAR-10 and 0.5 for EMNIST
     default_pdr = 0.5 if args.dataset in ("mnist", "emnist") else 0.33
     pdr = args.pdr or default_pdr
-    pdr_2 = pdr*1.5
+    print("pdr: ",pdr)
 
     if args.dataset in ("mnist", "emnist"):
         fraction=0.2 #0.0334 #0.01 #0.1 #0.0168 #10
@@ -939,7 +939,6 @@ def load_poisoned_dataset_updated(args):
 
         total_ardis_samples = images_seven_cut.size()[0]
         poisoned_emnist_dataset = copy.deepcopy(emnist_train_dataset)
-        poisoned_emnist_dataset_2 = copy.deepcopy(emnist_train_dataset)
 
         ################## (Temporial, may be changed later) ###################
         num_gdps_sampled = 100 # Keep original as the edge-case backdoor attack paper
@@ -947,32 +946,25 @@ def load_poisoned_dataset_updated(args):
         samped_emnist_data_indices = np.random.choice(poisoned_emnist_dataset.data.shape[0], num_sampled_data_points, replace=False)
         poisoned_emnist_dataset.data = poisoned_emnist_dataset.data[samped_emnist_data_indices, :, :]
         poisoned_emnist_dataset.targets = poisoned_emnist_dataset.targets[samped_emnist_data_indices]
-        poisoned_emnist_dataset_2.data = poisoned_emnist_dataset_2.data[samped_emnist_data_indices, :, :]
-        poisoned_emnist_dataset_2.targets = poisoned_emnist_dataset_2.targets[samped_emnist_data_indices]
         ########################################################################
         clean_trainset = copy.deepcopy(poisoned_emnist_dataset)
 
         # NEW: This step tries to calculate number of poisoned samples needed. 
         total_poisoned_samples = int(pdr*num_sampled_data_points/(1.0-pdr))
-        total_poisoned_samples_2 = int(pdr*num_sampled_data_points/(1.0-pdr_2))
 
         print("total_ardis_samples: ", total_ardis_samples)
         
         samped_poisoned_data_indices = np.random.choice(total_ardis_samples, total_poisoned_samples, replace=False)
-        samped_poisoned_data_indices_2 = np.random.choice(total_ardis_samples, total_poisoned_samples_2, replace=False)
         
         if fraction < 1:
             poisoned_emnist_dataset.data = torch.cat((poisoned_emnist_dataset.data, images_seven_cut[samped_poisoned_data_indices]))
             poisoned_emnist_dataset.targets = torch.cat((poisoned_emnist_dataset.targets, poisoned_labels_cut[samped_poisoned_data_indices]))
-            poisoned_emnist_dataset_2.data = torch.cat((poisoned_emnist_dataset_2.data, images_seven_cut[samped_poisoned_data_indices_2]))
-            poisoned_emnist_dataset_2.targets = torch.cat((poisoned_emnist_dataset_2.targets, poisoned_labels_cut[samped_poisoned_data_indices_2]))
             
         else:
             poisoned_emnist_dataset.data = torch.cat((poisoned_emnist_dataset.data, images_seven_DA))
             poisoned_emnist_dataset.targets = torch.cat((poisoned_emnist_dataset.targets, poisoned_labels_DA))        
 
         num_dps_poisoned_dataset = poisoned_emnist_dataset.data.shape[0]
-        num_dps_poisoned_dataset_2 = poisoned_emnist_dataset_2.data.shape[0]
             
         # prepare EMNIST dataset (clean dataset for evaluation)
         emnist_train_dataset = datasets.EMNIST('./data', split="digits", train=True, download=True,
@@ -990,8 +982,6 @@ def load_poisoned_dataset_updated(args):
                            ]))
 
         poisoned_train_loader = torch.utils.data.DataLoader(poisoned_emnist_dataset,
-            batch_size=args.batch_size, shuffle=True, **kwargs)
-        poisoned_train_loader_2 = torch.utils.data.DataLoader(poisoned_emnist_dataset_2,
             batch_size=args.batch_size, shuffle=True, **kwargs)
         vanilla_test_loader = torch.utils.data.DataLoader(emnist_test_dataset,
             batch_size=args.test_batch_size, shuffle=False, **kwargs)

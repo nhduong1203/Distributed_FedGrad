@@ -154,7 +154,7 @@ if __name__ == "__main__":
     adversarial_local_training_period = 5
 
     # load poisoned dataset:
-    poisoned_train_loader, vanilla_test_loader, targetted_task_test_loader, num_dps_poisoned_dataset, clean_train_loader = load_poisoned_dataset(args=args)
+    poisoned_train_loader, vanilla_test_loader, targetted_task_test_loader, num_dps_poisoned_dataset, clean_train_loader = load_poisoned_dataset_updated(args=args)
     # READ_CKPT = False
     if READ_CKPT:
         if args.model == "lenet":

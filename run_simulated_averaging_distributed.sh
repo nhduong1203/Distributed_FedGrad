@@ -6,8 +6,8 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --part_nets_per_round 30 \
 --local_train_period 3 \
 --adversarial_local_training_period 3 \
---dataset cifar10 \
---model vgg9 \
+--dataset emnist \
+--model lenet \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
@@ -21,10 +21,10 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --eps 2 \
 --adv_lr 0.02 \
 --prox_attack False \
---poison_type southwest \
+--poison_type ardis \
 --norm_bound 2 \
 --attacker_percent 0.25 \
---pdr 0.33 \
+--pdr 0.54321 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
 --number_verifiers 15 \
@@ -32,8 +32,8 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --randomChoose True \
 --updateSelection True \
 --malicious_verifier normal \
---device=cuda:0 \
-> log/test_cifar10 2>&1
+--device=cuda:1 \
+> log/test_cifar10.txt 2>&1
 
 # python simulated_averaging_distributed.py --fraction 0.15 \
 # --lr 0.02 \
@@ -70,7 +70,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 # --updateSelection True \
 # --malicious_verifier normal \
 # --device=cuda:0 \
-> log/test_mnist 2>&1
+# > log/test_mnist 2>&1
 
 
 
