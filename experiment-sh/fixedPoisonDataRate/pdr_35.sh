@@ -2,7 +2,7 @@
 #$ -cwd
 #$ -l rt_G.small=1
 #$ -l h_rt=54:00:00
-#$ -o /home/aaa10078nj/Federated_Learning//HaiDuong_DistFedGrad/logs/poisonDataRate/$JOB_NAME_$JOB_ID.log
+#$ -o /home/aaa10078nj/Federated_Learning//HaiDuong_DistFedGrad/logs/fixedPoisonDataRate/$JOB_NAME_$JOB_ID.log
 #$ -j y
 ​
 source /etc/profile.d/modules.sh
@@ -24,7 +24,7 @@ PATH=/apps/centos7/python/3.10.4/bin:${PATH}
 ​
 source ~/venv/pytorch1.11+horovod/bin/activate
 python --version
-LOG_DIR="/home/aaa10078nj/Federated_Learning/HaiDuong_DistFedGrad/logs/poisonDataRate/$JOB_NAME_$JOB_ID"
+LOG_DIR="/home/aaa10078nj/Federated_Learning/HaiDuong_DistFedGrad/logs/fixedPoisonDataRate/$JOB_NAME_$JOB_ID"
 rm -r ${LOG_DIR}
 mkdir ${LOG_DIR}
 ​
@@ -47,7 +47,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
 --attack_method blackbox \
---wandb_group poisonDataRateGroup \
+--wandb_group fixedPoisonDataRateGroup \
 --instance pdr_35 \
 --attack_case edge-case \
 --model_replacement False \

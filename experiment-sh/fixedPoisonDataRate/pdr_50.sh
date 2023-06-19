@@ -2,7 +2,7 @@
 #$ -cwd
 #$ -l rt_G.small=1
 #$ -l h_rt=54:00:00
-#$ -o /home/aaa10078nj/Federated_Learning//HaiDuong_DistFedGrad/logs/additionalExperiment/$JOB_NAME_$JOB_ID.log
+#$ -o /home/aaa10078nj/Federated_Learning//HaiDuong_DistFedGrad/logs/fixedPoisonDataRate/$JOB_NAME_$JOB_ID.log
 #$ -j y
 ​
 source /etc/profile.d/modules.sh
@@ -24,7 +24,7 @@ PATH=/apps/centos7/python/3.10.4/bin:${PATH}
 ​
 source ~/venv/pytorch1.11+horovod/bin/activate
 python --version
-LOG_DIR="/home/aaa10078nj/Federated_Learning/HaiDuong_DistFedGrad/logs/additionalExperiment/$JOB_NAME_$JOB_ID"
+LOG_DIR="/home/aaa10078nj/Federated_Learning/HaiDuong_DistFedGrad/logs/fixedPoisonDataRate/$JOB_NAME_$JOB_ID"
 rm -r ${LOG_DIR}
 mkdir ${LOG_DIR}
 ​
@@ -33,22 +33,22 @@ cd $SGE_LOCALDIR/$JOB_ID
 #cd Distributed_FedGrad
 ​
 # southwest attack
-python simulated_averaging_distributed.py --fraction 0.15 \
+python simulated_averaging_distributed.py --fraction 0.1 \
 --lr 0.02 \
 --gamma 0.998 \
---num_nets 3383 \
+--num_nets 200 \
 --fl_round 500 \
 --part_nets_per_round 30 \
 --local_train_period 3 \
 --adversarial_local_training_period 3 \
---dataset emnist \
---model lenet \
+--dataset cifar10 \
+--model vgg9 \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
 --attack_method blackbox \
---wandb_group additionalExperimentGroup \
---instance emnist_19Verifiers_6Clients_reverse \
+--wandb_group fixedPoisonDataRateGroup \
+--instance pdr_50 \
 --attack_case edge-case \
 --model_replacement False \
 --project_frequency 1 \
@@ -56,17 +56,17 @@ python simulated_averaging_distributed.py --fraction 0.15 \
 --eps 2 \
 --adv_lr 0.02 \
 --prox_attack False \
---poison_type ardis \
+--poison_type southwest \
 --norm_bound 2 \
 --attacker_percent 0.25 \
---pdr 0.5 \
+--pdr 0.50 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
---number_verifiers 19 \
---clients_per_verifier 6 \
+--number_verifiers 15 \
+--clients_per_verifier 7 \
 --randomChoose True \
 --updateSelection True \
---malicious_verifier reverse \
+--malicious_verifier normal \
 --log_folder ${LOG_DIR} \
 --device=cuda
 #> log/exp1 2>&1
