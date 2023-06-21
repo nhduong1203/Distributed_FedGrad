@@ -151,7 +151,7 @@ if __name__ == "__main__":
     # rounds of fl to conduct
     ## some hyper-params here:
     local_training_period = args.local_train_period #5 #1
-    adversarial_local_training_period = 5
+    # adversarial_local_training_period = 5
 
     # load poisoned dataset:
     poisoned_train_loader, vanilla_test_loader, targetted_task_test_loader, num_dps_poisoned_dataset, clean_train_loader = load_poisoned_dataset_updated(args=args)

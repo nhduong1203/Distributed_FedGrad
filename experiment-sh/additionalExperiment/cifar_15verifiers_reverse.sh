@@ -63,7 +63,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
 --number_verifiers 15 \
---clients_per_verifier 6 \
+--clients_per_verifier 7 \
 --randomChoose True \
 --updateSelection True \
 --malicious_verifier reverse \
