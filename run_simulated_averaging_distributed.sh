@@ -25,7 +25,7 @@ python simulated_averaging.py --fraction 0.1 \
 --poison_type southwest \
 --norm_bound 2 \
 --attacker_percent 0.25 \
---pdr 0.33 \
+--pdr 0.654321 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
 --device=cuda:0 \

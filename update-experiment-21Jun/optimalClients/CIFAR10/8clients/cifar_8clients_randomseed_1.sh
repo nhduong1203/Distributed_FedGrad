@@ -37,7 +37,7 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --lr 0.02 \
 --gamma 0.998 \
 --num_nets 200 \
---fl_round 500 \
+--fl_round 1000 \
 --rand_seed 7 \
 --part_nets_per_round 30 \
 --local_train_period 2 \
