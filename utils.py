@@ -951,6 +951,10 @@ def load_poisoned_dataset_updated(args):
 
         # NEW: This step tries to calculate number of poisoned samples needed. 
         total_poisoned_samples = int(pdr*num_sampled_data_points/(1.0-pdr))
+        print("Start cifar checking poison data rate")
+        print("Clean num_sampled_data_points: ", num_sampled_data_points)
+        print("Poison num_sampled_poisoned_data_points: ", total_poisoned_samples)
+        print("Calculate pdr: ", total_poisoned_samples/(total_poisoned_samples + num_sampled_data_points))
 
         print("total_ardis_samples: ", total_ardis_samples)
         
@@ -1045,6 +1049,11 @@ def load_poisoned_dataset_updated(args):
             # downsample the poisoned dataset #################
             if args.attack_case == "edge-case":
                 num_sampled_poisoned_data_points = 200 # N
+                num_sampled_poisoned_data_points = int(pdr*num_sampled_data_points/(1.0-pdr))
+                print("Start cifar checking poison data rate")
+                print("Clean num_sampled_data_points: ", num_sampled_data_points)
+                print("Poison num_sampled_poisoned_data_points: ", num_sampled_poisoned_data_points)
+                print("Calculate pdr: ", num_sampled_poisoned_data_points/(num_sampled_poisoned_data_points + num_sampled_data_points))
                 samped_poisoned_data_indices = np.random.choice(saved_southwest_dataset_train.shape[0],
                                                                 num_sampled_poisoned_data_points,
                                                                 replace=False)
