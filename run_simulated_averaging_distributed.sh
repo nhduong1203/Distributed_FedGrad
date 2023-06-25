@@ -28,13 +28,13 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --pdr 0.2 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
---number_verifiers 15 \
---clients_per_verifier 6 \
+--number_verifiers 10 \
+--clients_per_verifier 3 \
 --randomChoose True \
 --updateSelection True \
 --malicious_verifier normal \
---device=cuda:0 \
-> log/emnist_test_pdr_20.txt 2>&1
+--device=cuda:1 \
+> log/test_bug.txt 2>&1
 # --number_verifiers 15 \
 # --clients_per_verifier 6 \
 # --randomChoose True \

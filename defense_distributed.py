@@ -479,8 +479,7 @@ class FedGrad(Defense):
                   
         # From now on, trusted_model contains the index base model treated as valid user.
         suspicious_idxs_2, saved_pairwise_sim, layer2_inf_t = [], [], 0.0
-        final_suspicious_idxs = suspicious_idxs_1 
-
+        
         # NOW CHECK FOR SWITCH ROUND
         # TODO: find dynamic threshold
         # STILL PERFORM HARD-FILTER to save the historical information about colluding property.
@@ -500,8 +499,8 @@ class FedGrad(Defense):
         print("[Hard-filter] predicted suspicious set is: ", global_suspicious_idxs_2)
         print(f"Total computation time of the 2nd layer is: {layer2_inf_t}")
         # ----------------------------------- HARD FILTER --------------------------------------------------------------
-        
-        pseudo_final_suspicious_idxs = np.union1d(suspicious_idxs_2, suspicious_idxs_1).flatten()
+        final_suspicious_idxs = suspicious_idxs_1 
+        pseudo_final_suspicious_idxs = np.union1d(suspicious_idxs_2, suspicious_idxs_1).flatten().astype(int)
         if round >= self.switch_round:
             final_suspicious_idxs = pseudo_final_suspicious_idxs
             
