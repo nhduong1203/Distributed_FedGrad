@@ -500,7 +500,7 @@ class FedGrad(Defense):
         print(f"Total computation time of the 2nd layer is: {layer2_inf_t}")
         # ----------------------------------- HARD FILTER --------------------------------------------------------------
         final_suspicious_idxs = suspicious_idxs_1 
-        pseudo_final_suspicious_idxs = np.union1d(suspicious_idxs_2, suspicious_idxs_1).flatten()
+        pseudo_final_suspicious_idxs = np.union1d(suspicious_idxs_2, suspicious_idxs_1).flatten().astype(int)
         if round >= self.switch_round:
             final_suspicious_idxs = pseudo_final_suspicious_idxs
             
