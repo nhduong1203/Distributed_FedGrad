@@ -40,8 +40,8 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --fl_round 500 \
 --rand_seed 100 \
 --part_nets_per_round 30 \
---local_train_period 3 \
---adversarial_local_training_period 3 \
+--local_train_period 2 \
+--adversarial_local_training_period 2 \
 --dataset cifar10 \
 --model vgg9 \
 --fl_mode fixed-pool \
