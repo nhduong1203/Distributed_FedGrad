@@ -42,7 +42,7 @@ python simulated_averaging.py --fraction 0.15 \
 --part_nets_per_round 30 \
 --local_train_period 2 \
 --adversarial_local_training_period 2 \
---dataset eminst \
+--dataset emnist \
 --model lenet \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \

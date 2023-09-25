@@ -246,10 +246,12 @@ def load_cifar10_data(datadir):
 
 
 def partition_data(dataset, datadir, partition, n_nets, alpha, args):
+    print(dataset)
     if dataset == 'mnist':
         X_train, y_train, X_test, y_test = load_mnist_data(datadir)
         n_train = X_train.shape[0]
     elif dataset == 'emnist':
+        print("aaaaaaaaaaaaaa")
         X_train, y_train, X_test, y_test = load_emnist_data(datadir)
         n_train = X_train.shape[0]
     elif dataset.lower() == 'cifar10':
@@ -288,6 +290,7 @@ def partition_data(dataset, datadir, partition, n_nets, alpha, args):
             net_dataidx_map[j] = [i for i in range(num_samples_train)] # TODO: this is a dirty hack. needs modification
         return None, net_dataidx_map, None
 
+    
     if partition == "homo":
         idxs = np.random.permutation(n_train)
         batch_idxs = np.array_split(idxs, n_nets)

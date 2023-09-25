@@ -42,14 +42,14 @@ python simulated_averaging_distributed.py --fraction 0.15 \
 --part_nets_per_round 30 \
 --local_train_period 2 \
 --adversarial_local_training_period 2 \
---dataset eminst \
+--dataset emnist \
 --model lenet \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
 --attack_method pgd \
 --wandb_group maliciousVerifiersGroup \
---instance eminst_random_pgd_mr \
+--instance emnist_random_pgd_mr \
 --attack_case edge-case \
 --model_replacement True \
 --project_frequency 1 \

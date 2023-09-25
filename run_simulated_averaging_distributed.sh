@@ -1,8 +1,8 @@
-python simulated_averaging_distributed.py --fraction 0.15 \
+python simulated_averaging.py --fraction 0.1 \
 --lr 0.02 \
 --gamma 0.998 \
 --num_nets 3383 \
---fl_round 100 \
+--fl_round 500 \
 --rand_seed 7 \
 --part_nets_per_round 30 \
 --local_train_period 2 \
@@ -13,8 +13,8 @@ python simulated_averaging_distributed.py --fraction 0.15 \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
 --attack_method pgd \
---wandb_group additionalExp \
---instance emnist_fixing_pgdmr_259 \
+--wandb_group EminstCentralizeGroup \
+--instance eminst_centralize_pgd_mr \
 --attack_case edge-case \
 --model_replacement True \
 --project_frequency 1 \
@@ -28,10 +28,4 @@ python simulated_averaging_distributed.py --fraction 0.15 \
 --pdr 0.5 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
---number_verifiers 15 \
---clients_per_verifier 7 \
---randomChoose True \
---updateSelection True \
---malicious_verifier reverse \
---device=cuda:1 \
-> log/test_pgd_259.txt 2>&1
+--device=cuda:0 \
