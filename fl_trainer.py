@@ -559,7 +559,7 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
 
             #First we update the local updates of each client in this training round
             
-            get_logging_items(net_list, selected_node_indices, self.net_avg, selected_attackers, flr)
+            # get_logging_items(net_list, selected_node_indices, self.net_avg, selected_attackers, flr)
 
             
             # Time for FoolsGold only
