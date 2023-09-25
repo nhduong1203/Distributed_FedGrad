@@ -1069,37 +1069,43 @@ class DeepSight(Defense):
                 if amount_of_positives < self.tau:
                     for idx in indexes:
                         acpt_models_idxs.append(idx)
+                        
+        # acpt_models_idxs: local index
         
-        if len(acpt_models_idxs) > 0:
-            print(f"acpt_models_idxs: {acpt_models_idxs}")
-            # we reconstruct the weighted averaging here:
-            selected_num_dps = np.array(num_dps)[acpt_models_idxs]
-            reconstructed_freq = [snd/sum(selected_num_dps) for snd in selected_num_dps]
+        pred_g_honest = [g_user_indices[ti] for ti in acpt_models_idxs]
+        pred_g_attacker = [ti for ti in g_user_indices if ti not in pred_g_honest]
+        
+        
+        # if len(acpt_models_idxs) > 0:
+        #     print(f"acpt_models_idxs: {acpt_models_idxs}")
+        #     # we reconstruct the weighted averaging here:
+        #     selected_num_dps = np.array(num_dps)[acpt_models_idxs]
+        #     reconstructed_freq = [snd/sum(selected_num_dps) for snd in selected_num_dps]
 
-            logger.info("Num data points: {}".format(num_dps))
-            logger.info("Num selected data points: {}".format(selected_num_dps))
-            logger.info("The chosen ones are users: {}, which are global users: {}".format(acpt_models_idxs, [g_user_indices[ti] for ti in acpt_models_idxs]))
-            flatten_g_t = vectorize_net(g_t).detach().cpu().numpy()
-            local_models_norms = [norm(w[i]-flatten_g_t) for i in range(n)]
-            s = np.median(local_models_norms)
-            lambda_idxs = []
-            for idx in range(n):
-                vectorize_diff = w[idx] - flatten_g_t
-                weight_diff_norm = norm(vectorize_diff)
-                lambda_idx = min(1.0, s/weight_diff_norm)
-                w[idx] = lambda_idx*w[idx]
-            if not acpt_models_idxs:
-                return [g_t], [1.0]
-            aggregated_grad = np.average(np.array(w)[acpt_models_idxs, :], weights=reconstructed_freq, axis=0).astype(np.float32)
+        #     logger.info("Num data points: {}".format(num_dps))
+        #     logger.info("Num selected data points: {}".format(selected_num_dps))
+        #     logger.info("The chosen ones are users: {}, which are global users: {}".format(acpt_models_idxs, [g_user_indices[ti] for ti in acpt_models_idxs]))
+        #     flatten_g_t = vectorize_net(g_t).detach().cpu().numpy()
+        #     local_models_norms = [norm(w[i]-flatten_g_t) for i in range(n)]
+        #     s = np.median(local_models_norms)
+        #     lambda_idxs = []
+        #     for idx in range(n):
+        #         vectorize_diff = w[idx] - flatten_g_t
+        #         weight_diff_norm = norm(vectorize_diff)
+        #         lambda_idx = min(1.0, s/weight_diff_norm)
+        #         w[idx] = lambda_idx*w[idx]
+        #     if not acpt_models_idxs:
+        #         return [g_t], [1.0]
+        #     aggregated_grad = np.average(np.array(w)[acpt_models_idxs, :], weights=reconstructed_freq, axis=0).astype(np.float32)
 
-            aggregated_model = client_models[0] # slicing which doesn't really matter
-            load_model_weight(aggregated_model, torch.from_numpy(aggregated_grad).to(device))
-            neo_net_list = [aggregated_model]
-            #logger.info("Norm of Aggregated Model: {}".format(torch.norm(torch.nn.utils.parameters_to_vector(aggregated_model.parameters())).item()))
-            neo_net_freq = [1.0]
-        else:
-            neo_net_freq = [1.0]
-            neo_net_list = [g_t]
+        #     aggregated_model = client_models[0] # slicing which doesn't really matter
+        #     load_model_weight(aggregated_model, torch.from_numpy(aggregated_grad).to(device))
+        #     neo_net_list = [aggregated_model]
+
+        #     neo_net_freq = [1.0]
+        # else:
+        #     neo_net_freq = [1.0]
+        #     neo_net_list = [g_t]
         return neo_net_list, neo_net_freq
     
 if __name__ == "__main__":

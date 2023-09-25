@@ -12,11 +12,11 @@ python simulated_averaging_distributed.py --fraction 0.15 \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
---attack_method pgd \
+--attack_method blackbox \
 --wandb_group additionalExp \
---instance emnist_fixing_pgdmr_259 \
+--instance emnist_fixing_259 \
 --attack_case edge-case \
---model_replacement True \
+--model_replacement False \
 --project_frequency 1 \
 --stddev 0.025 \
 --eps 2 \
@@ -34,4 +34,4 @@ python simulated_averaging_distributed.py --fraction 0.15 \
 --updateSelection True \
 --malicious_verifier reverse \
 --device=cuda:1 \
-> log/test_pgd_259.txt 2>&1
+> log/test_259.txt 2>&1

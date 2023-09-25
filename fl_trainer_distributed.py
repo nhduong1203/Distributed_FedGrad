@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import multiprocessing
+import bisect
 
 
 # from defense import Con
@@ -423,21 +424,27 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
         else:
             NotImplementedError("Unsupported defense method !")
         self.__attacker_pool = np.random.choice(self.num_nets, int(self.num_nets*self.attacker_percent), replace=False)
+        
+    def cluster_numbers(self, numbers):
+        big = [i for i, num in enumerate(numbers) if num > 0.5]
+        medium = [i for i, num in enumerate(numbers) if num == 0.5]
+        small = [i for i, num in enumerate(numbers) if num < 0.5]
+        return big, medium, small
     
     def select_random_indexes(self, numbers, K):
-        # Sắp xếp mảng theo giá trị giảm dần
-        sorted_indexes = sorted(range(len(numbers)), key=lambda i: numbers[i], reverse=True)
-        
-        # Lấy chỉ mục của 50% số có giá trị lớn nhất
-        top_half_indexes = sorted_indexes[:len(numbers)//2]
-        
-        # Chọn ngẫu nhiên K chỉ mục từ danh sách 50% số có giá trị lớn nhất
-        random_indexes = random.sample(top_half_indexes, K)
+        safe, uk, unsafe = self.cluster_numbers(numbers)
+        random_indexes = []
+        if K <= len(safe):
+            random_indexes = random.sample(safe, K)
+        else:
+            random_indexes += safe
+            K -= len(safe)
+            random_indexes += random.sample(uk, K)
+            
         
         return random_indexes
     
     def select_verifier(self):
-        #self.trustworthy_scores[client].append(self.lambda_1)
         aver_trustworthy_score = []
         for i in range(self.num_nets):
             if(len(self._defender.trustworthy_scores[i])==0):
@@ -445,7 +452,39 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
             else:
                 aver_trustworthy_score.append(np.average(self._defender.trustworthy_scores[i]))
         random_indexes = self.select_random_indexes(aver_trustworthy_score, self.number_verifiers)
+        print(f'len {len(random_indexes)}, detail: {random_indexes}')
         return random_indexes
+    
+    # def normalize_probs(self, array):
+    #     total_prob = sum(array)
+    #     normalized_probs = [prob / total_prob for prob in array]
+    #     return normalized_probs
+    
+    # def random_pick_distinct_with_prob(self, array, k):
+    #     normalized_probs = self.normalize_probs(array)
+    #     cumulative_probs = [normalized_probs[0]]
+    #     for i in range(1, len(normalized_probs)):
+    #         cumulative_probs.append(cumulative_probs[i-1] + normalized_probs[i])
+
+    #     selected_numbers = set()
+    #     while len(selected_numbers) < k:
+    #         rand = random.random() 
+    #         selected_idx = bisect.bisect_left(cumulative_probs, rand)  
+    #         selected_numbers.add(selected_idx)
+    #         print(normalized_probs[selected_idx])
+
+    #     return list(selected_numbers)
+    
+    # def select_verifier_prob(self):
+    #     aver_trustworthy_score = []
+    #     for i in range(self.num_nets):
+    #         if(len(self._defender.trustworthy_scores[i])==0):
+    #             aver_trustworthy_score.append(0)
+    #         else:
+    #             print(self._defender.trustworthy_scores[i])
+    #             aver_trustworthy_score.append(np.average(self._defender.trustworthy_scores[i]))
+    #     random_indexes = self.random_pick_distinct_with_prob(aver_trustworthy_score, self.number_verifiers)
+    #     return random_indexes
 
 
     def run(self, wandb_ins=None):
@@ -455,11 +494,11 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
         fl_iter_list = []
         adv_norm_diff_list = []
         wg_norm_list = []
-        tpr_list = []
-        tnr_list = []
-        fpr_list = []
-        atk_verify_list = []
-        not_verified_list = []
+        # tpr_list = []
+        # tnr_list = []
+        # fpr_list = []
+        # atk_verify_list = []
+        # not_verified_list = []
         # additional information tpr_fedgrad, fpr_fedgrad, tnr_fedgrad
         tpr_fedgrad, fpr_fedgrad, tnr_fedgrad = 0.0, 0.0, 0.0
         layer1_inf_time, layer2_inf_t, fedgrad_t = 0.0, 0.0, 0.0    
@@ -752,12 +791,16 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
                     for element in selected_node_indices:
                         if ((honest_dict[element] + atk_dict[element]) == 0): # client that not be verified
                             if np.average(self._defender.trustworthy_scores[element]) >= 0.75:
-                                detect_honest.append(element)
+                                detect_honest.append(element)    
                             else:
                                 detect_attacker.append(element)
 
                         else:
-                            if(honest_dict[element]/(honest_dict[element] + atk_dict[element]) > 0.5):
+                            if flr <= 5:
+                                _epsilon = 0.74999
+                            else:
+                                _epsilon = 0.5
+                            if(honest_dict[element]/(honest_dict[element] + atk_dict[element]) > _epsilon):
                                 detect_honest.append(element)
                             else:
                                 detect_attacker.append(element)
@@ -767,6 +810,14 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
                     for element in selected_node_indices:
                         if element not in detect_attacker:
                             detect_honest.append(element)
+                            
+                # print("---------------------------------check attacker-----------------------------------")
+                # print(len(detect_honest))
+                # for i in selected_attackers:
+                #     if i in detect_honest:
+                #         print("majority voting: ",honest_dict[i]/(honest_dict[i] + atk_dict[i]))
+                #         print("trusting score: ", np.average(self._defender.trustworthy_scores[i]))
+                # print("---------------------------------check attacker-----------------------------------")
                         
                 self._defender.update_trustworthy(detect_attacker, detect_honest)
         
@@ -774,6 +825,8 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
                     if (client not in detect_attacker):
                         honest_nets.append(net_list[idx])
                         total_num_dps.append(num_data_points[idx])
+                        
+                
 
 
                 #-----------------------------------------------------------------------------------------------------------------------------------------------------#
