@@ -46,8 +46,8 @@ python simulated_averaging_distributed.py --fraction 0.15 \
 --model lenet \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
---defense_method pgd \
---attack_method blackbox \
+--defense_method fedgrad \
+--attack_method pgd \
 --wandb_group maliciousVerifiersGroup \
 --instance emnist_reverse_pgd_mr \
 --attack_case edge-case \
