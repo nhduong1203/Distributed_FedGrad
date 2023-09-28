@@ -171,6 +171,7 @@ def train(model, device, train_loader, optimizer, epoch, log_interval, criterion
                         wf = w1+w2+w3
                         w[i].data = wf.data
             else:
+                print("--------------------------------------------- doing pgd attack ----------------------------------------------------------")
                 # do l2_projection
                 adv_optimizer.step()
                 w = list(model.parameters())
@@ -525,6 +526,7 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
 
                     # if model_replacement scale models
                     if self.model_replacement:
+                        print("---------------------------------------------- doing model replacement-----------------------------------------------------------------------------")
                         v = torch.nn.utils.parameters_to_vector(net.parameters())
                         logger.info("Attacker before scaling : Norm = {}".format(torch.norm(v)))
                         # adv_norm_diff = calc_norm_diff(gs_model=net, vanilla_model=self.net_avg, epoch=e, fl_round=flr, mode="bad")

@@ -14,9 +14,9 @@ python simulated_averaging.py --fraction 0.1 \
 --defense_method fedgrad \
 --attack_method pgd \
 --wandb_group Testing \
---instance cifar_centralize_blackbox \
+--instance pgd \
 --attack_case edge-case \
---model_replacement False \
+--model_replacement True \
 --project_frequency 1 \
 --stddev 0.025 \
 --eps 2 \
@@ -29,4 +29,4 @@ python simulated_averaging.py --fraction 0.1 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
 --device=cuda:1 \
-> log/pgd 2>&1
+> log/pgd_mr 2>&1
