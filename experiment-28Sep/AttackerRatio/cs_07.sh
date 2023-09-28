@@ -2,7 +2,7 @@
 #$ -cwd
 #$ -l rt_G.small=1
 #$ -l h_rt=54:00:00
-#$ -o /home/aaa10078nj/Federated_Learning//HaiDuong_DistFedGrad/logs/PDR/$JOB_NAME_$JOB_ID.log
+#$ -o /home/aaa10078nj/Federated_Learning//HaiDuong_DistFedGrad/logs/AttackerRatio/$JOB_NAME_$JOB_ID.log
 #$ -j y
 ​
 source /etc/profile.d/modules.sh
@@ -24,7 +24,7 @@ PATH=/apps/centos7/python/3.10.4/bin:${PATH}
 ​
 source ~/venv/pytorch1.11+horovod/bin/activate
 python --version
-LOG_DIR="/home/aaa10078nj/Federated_Learning/HaiDuong_DistFedGrad/logs/PDR/$JOB_NAME_$JOB_ID"
+LOG_DIR="/home/aaa10078nj/Federated_Learning/HaiDuong_DistFedGrad/logs/AttackerRatio/$JOB_NAME_$JOB_ID"
 rm -r ${LOG_DIR}
 mkdir ${LOG_DIR}
 ​
@@ -47,8 +47,8 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
 --attack_method blackbox \
---wandb_group fixedPoisonDataRateGroup \
---instance pdr_07 \
+--wandb_group compromisingRatioGroup \
+--instance cr_07 \
 --attack_case edge-case \
 --model_replacement False \
 --project_frequency 1 \
@@ -58,8 +58,8 @@ python simulated_averaging_distributed.py --fraction 0.1 \
 --prox_attack False \
 --poison_type southwest \
 --norm_bound 2 \
---attacker_percent 0.25 \
---pdr 0.07 \
+--attacker_percent 0.07 \
+--pdr 0.33 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
 --number_verifiers 15 \
