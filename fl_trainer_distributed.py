@@ -362,6 +362,7 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
         self.randomChoose = arguments['randomChoose']
         self.updateSelection = arguments['updateSelection']
         self.malicious_verifier = arguments['malicious_verifier']
+        self.malicious_verifier_rate = arguments['malicious_verifier_rate']
         self.reputation_score = [1.0 for _ in range(arguments['num_nets'])] #init reputation score for all clients in the FL systems
         self.local_update_history = [[0.0] for _ in range(arguments['num_nets'])] #theta i,t => keep track of update history of clients
         self.flatten_weights = []
@@ -751,7 +752,22 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
                                                             device=self.device) 
                     
                     # Reverse attacker's verify result
-                    if verifier_set[verifier_id] in self.__attacker_pool:
+                    # if verifier_set[verifier_id] in self.__attacker_pool:
+                    #     atk_verify += 1
+                    #     if self.malicious_verifier == "reverse": 
+                    #         temp = pred_g_attacker
+                    #         pred_g_attacker = pred_g_honest
+                    #         pred_g_honest = temp
+
+                    #     elif self.malicious_verifier == "random":
+                    #         s = random.randint(1, len(this_node))
+                    #         pred_g_attacker = np.random.choice(this_node, s, replace=False).tolist()
+                    #         pred_g_honest = []
+                    #         for i in this_node:
+                    #             if i not in pred_g_attacker:
+                    #                 pred_g_honest.append(i)
+                    this_prob = random.random()
+                    if this_prob < self.malicious_verifier_rate:
                         atk_verify += 1
                         if self.malicious_verifier == "reverse": 
                             temp = pred_g_attacker
@@ -765,6 +781,7 @@ class FixedPoolFederatedLearningTrainer(FederatedLearningTrainer):
                             for i in this_node:
                                 if i not in pred_g_attacker:
                                     pred_g_honest.append(i)
+                    
 
                     detect_attacker.append(pred_g_attacker)
                     detect_honest.append(pred_g_honest)

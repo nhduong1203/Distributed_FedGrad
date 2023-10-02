@@ -1,20 +1,19 @@
-python simulated_averaging.py --fraction 0.1 \
+python simulated_averaging_distributed.py --fraction 0.1 \
 --lr 0.02 \
 --gamma 0.998 \
---num_nets 3383 \
+--num_nets 200 \
 --fl_round 500 \
---rand_seed 7 \
 --part_nets_per_round 30 \
---local_train_period 2 \
---adversarial_local_training_period 2 \
+--local_train_period 3 \
+--adversarial_local_training_period 3 \
 --dataset cifar10 \
 --model vgg9 \
 --fl_mode fixed-pool \
 --attacker_pool_size 100 \
 --defense_method fedgrad \
 --attack_method pgd \
---wandb_group Testing \
---instance cifar_centralize_blackbox \
+--wandb_group maliciousVerifiersGroup \
+--instance cifar10_randomChange_pgd \
 --attack_case edge-case \
 --model_replacement False \
 --project_frequency 1 \
@@ -22,11 +21,17 @@ python simulated_averaging.py --fraction 0.1 \
 --eps 2 \
 --adv_lr 0.02 \
 --prox_attack False \
---poison_type ardis \
+--poison_type southwest \
 --norm_bound 2 \
 --attacker_percent 0.25 \
---pdr 0.5 \
+--pdr 0.33 \
 --degree_nonIID 0.5 \
 --use_trustworthy True \
+--number_verifiers 15 \
+--clients_per_verifier 7 \
+--randomChoose True \
+--updateSelection True \
+--malicious_verifier random \
+--malicious_verifier_rate 0.1 \
 --device=cuda:1 \
-> log/pgd 2>&1
+> log/new_malicious_verifier 2>&1

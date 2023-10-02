@@ -109,7 +109,9 @@ if __name__ == "__main__":
     parser.add_argument('--updateSelection', type=bool_string, default=True,
                         help='')       
     parser.add_argument('--malicious_verifier', type=str, default="normal",
-                        help='')                                                             
+                        help='')  
+    parser.add_argument('--malicious_verifier_rate', type=float, default="0.1",
+                        help='')                                                           
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     kwargs = {'num_workers': 0, 'pin_memory': True} if use_cuda else {}
@@ -268,6 +270,7 @@ if __name__ == "__main__":
         "clients_per_verifier": args.clients_per_verifier,
         "randomChoose": args.randomChoose,
         "updateSelection": args.updateSelection,
+        "malicious_verifier_rate":args.malicious_verifier_rate,
         "malicious_verifier": args.malicious_verifier
     }
         
